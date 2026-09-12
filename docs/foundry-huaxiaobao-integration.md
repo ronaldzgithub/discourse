@@ -183,13 +183,52 @@ components retain separate terms. Review the exact deployed distribution and
 commercial/community usage; a root license does not establish rights to every
 third-party component, hosted service or trademark. Preserve all notices.
 
+## Executable offline contract boundary
+
+`script/foundry_huaxiaobao_contract.mjs` is a no-network planner and native
+webhook verifier for contract version
+`foundry.huaxiaobao.discourse.command.v1`. It contains no API client or secret.
+The boundary can be exercised locally with:
+
+```sh
+node --test script/foundry_huaxiaobao_contract.test.mjs
+node script/foundry_huaxiaobao_contract.mjs \
+  --plan docs/foundry-huaxiaobao-discourse-command.example.json
+```
+
+The planner exposes GET-only topic, unanswered, review-queue and notification
+inventory. Notification reads set `silent=true`, preventing the native
+`recent=true` code path from marking notifications seen. The only mutation plan
+is a versioned review-queue `approve_post` or `reject_post`: it requires a fresh
+read of the pending reviewable and its actions, the exact `version`, a distinct
+preparer and reviewer, an unexpired approval binding the object/version/action,
+then native review execution and GET read-back. It never emits a direct create-
+post call, so staff status cannot be used to bypass the queue or independent
+review.
+
+The `outbound_inventory` operation emits no request and fails the activation
+design closed unless the isolated instance is freshly verified with mail,
+invites, welcome and trust-level messages, digests, desktop push and push prompts
+off. This is intentionally stricter than current upstream defaults. A live
+Huaxiaobao executor must independently read or attest those current settings;
+the caller-provided snapshot is not deployment proof.
+
+Native Discourse webhooks are verified over the exact raw body with the
+`X-Discourse-Event-Signature` HMAC, expected instance, allowed event/resource
+type and stable object identity. Retries can have new event IDs, so deduplication
+uses the instance, event type, object identity/revision and payload hash while
+retaining the delivery ID only as provenance. Every accepted event produces a
+GET read-back plan; webhook 2xx is transport ACK only and never resumes Foundry
+by itself.
+
 ## Current truth and blockers
 
 | Milestone | State at this baseline |
 | --- | --- |
 | Source/fork/branch record | Recorded above; source present locally |
-| Integration design | This document only |
-| Huaxiaobao capability implementation | Not present or proven by this change |
+| Integration design | Documented; no live integration claimed |
+| Offline planner/verifier | Implemented and covered by local contract tests; it performs no HTTP requests |
+| Huaxiaobao live adapter/capability activation | Not present or proven by this change |
 | Isolated Linux deployment and health | Not run or proven |
 | Webhook/restart/duplicate/revocation tests | Not run or proven |
 | Real instance/account validation | Blocked pending an authorized forum and scoped account/key |

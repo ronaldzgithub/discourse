@@ -1,0 +1,7 @@
+{
+  "schema_version": "foundry.huaxiaobao.discourse.command.v1",
+  "command_id": "command-opaque-example",
+  "task_revision": 1,
+  "instance_ref": "discourse-instance-opaque-example",
+  "operation": "outbound_inventory"
+}
