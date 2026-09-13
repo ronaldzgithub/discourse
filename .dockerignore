@@ -1,0 +1,9 @@
+.git
+node_modules
+vendor/bundle
+log
+tmp
+coverage
+public/assets
+public/packs
+screenshots
